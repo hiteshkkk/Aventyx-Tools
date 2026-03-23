@@ -60,9 +60,50 @@ TMUXCONF
   echo "  ✓ Generated ~/.tmux.conf"
 }
 
+# ─── Install tmux if missing ──────────────────────────────────────────────────
+install_tmux() {
+  echo "  tmux not found. Installing..."
+  if command -v apt-get &>/dev/null; then
+    sudo apt-get update -qq && sudo apt-get install -y -qq tmux
+  elif command -v yum &>/dev/null; then
+    sudo yum install -y tmux
+  elif command -v dnf &>/dev/null; then
+    sudo dnf install -y tmux
+  elif command -v pacman &>/dev/null; then
+    sudo pacman -S --noconfirm tmux
+  elif command -v brew &>/dev/null; then
+    brew install tmux
+  elif command -v apk &>/dev/null; then
+    sudo apk add tmux
+  elif command -v zypper &>/dev/null; then
+    sudo zypper install -y tmux
+  else
+    echo "  ✗ Could not detect package manager. Install tmux manually:"
+    echo "    https://github.com/tmux/tmux/wiki/Installing"
+    exit 1
+  fi
+
+  if command -v tmux &>/dev/null; then
+    echo "  ✓ tmux $(tmux -V | cut -d' ' -f2) installed"
+  else
+    echo "  ✗ tmux installation failed"
+    exit 1
+  fi
+}
+
 # ─── Install command ─────────────────────────────────────────────────────────
 if [ "${1:-}" = "--install" ]; then
   echo "Installing tmx..."
+  echo ""
+
+  # Check/install tmux
+  if command -v tmux &>/dev/null; then
+    echo "  ✓ tmux $(tmux -V) already installed"
+  else
+    install_tmux
+  fi
+
+  # Copy tmx to PATH
   if [ -w /usr/local/bin ]; then
     cp "$0" /usr/local/bin/tmx
     chmod +x /usr/local/bin/tmx
@@ -70,12 +111,27 @@ if [ "${1:-}" = "--install" ]; then
     sudo cp "$0" /usr/local/bin/tmx
     sudo chmod +x /usr/local/bin/tmx
   fi
-  echo "  ✓ Installed to /usr/local/bin/tmx"
+  echo "  ✓ tmx installed to /usr/local/bin/tmx"
+
+  # Generate config
   generate_conf
   echo "  ✓ Prefix: Ctrl+a | Mouse: on | Scrollback: 5,000"
   echo ""
   echo "  Run 'tmx' to start!"
   exit 0
+fi
+
+# ─── Pre-flight check ────────────────────────────────────────────────────────
+if ! command -v tmux &>/dev/null; then
+  echo "tmux is not installed."
+  printf "Install it now? [y/N] "
+  read -r yn
+  if [ "$yn" = "y" ] || [ "$yn" = "Y" ]; then
+    install_tmux
+  else
+    echo "Install tmux first: https://github.com/tmux/tmux/wiki/Installing"
+    exit 1
+  fi
 fi
 
 if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ]; then
