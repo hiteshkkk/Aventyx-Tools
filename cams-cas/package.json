@@ -1,0 +1,15 @@
+{
+  "name": "cams-cas-automation",
+  "version": "1.0.0",
+  "description": "Headless Puppeteer automation to request CAMS CAS (Consolidated Account Statement)",
+  "main": "cams-cas.js",
+  "scripts": {
+    "start": "node cams-cas.js"
+  },
+  "keywords": ["cams", "cas", "mutual-fund", "kfintech", "puppeteer", "automation", "india"],
+  "author": "Aventryx (https://aventryx.in)",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^24.0.0"
+  }
+}

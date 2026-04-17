@@ -113,6 +113,22 @@ export TMX_SCROLLBACK=10000     # Scrollback lines (default: 5000)
 
 ---
 
+## cams-cas — CAMS CAS Statement Automation
+
+Headless Puppeteer script to request a **Consolidated Account Statement (CAS)** from [camsonline.com](https://www.camsonline.com). Covers all mutual fund holdings across all AMCs for a given email/PAN.
+
+```bash
+cd cams-cas && npm install
+CAMS_EMAIL=investor@example.com CAMS_PASSWORD=MyPass@123 node cams-cas.js
+```
+
+- Fully headless — no browser UI needed
+- Handles T&C popup, survey popup, ad tabs, Angular datepicker
+- Captures CAMS reference number from the success page
+- Easy to integrate into any Node.js app (see [cams-cas/README.md](cams-cas/README.md))
+
+---
+
 ## More tools coming soon
 
 This repo will host more lightweight developer tools. Star it to stay updated.
