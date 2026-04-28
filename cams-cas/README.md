@@ -98,7 +98,8 @@ console.log(result); // { success: true, reference: "CP209528027" }
 | Survey/ad popup | Auto-closed via `.close-icon` |
 | Ad tabs opening | Auto-closed via `targetcreated` event |
 | Angular Material datepicker rejects typed input | Navigated via DOM clicks through the calendar |
-| Success page redirects after ~3 seconds | Polled every 500ms to capture reference before redirect |
+| Success page redirects in ~1-3 seconds | Polled every 200ms (75 iterations, 15s budget) to capture reference before redirect |
+| Reference number prefix varies (`CP`, `D`, etc.) | Regex matches `[A-Z]{1,3}\d{8,}` — covers `CP123456789`, `D150816440`, etc. |
 | reCAPTCHA | Invisible reCAPTCHA only — handled transparently |
 
 ## Important notes

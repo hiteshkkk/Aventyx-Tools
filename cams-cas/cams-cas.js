@@ -209,24 +209,31 @@ async function main() {
   });
 
   // --- Poll for result (success page appears briefly then redirects) ---
+  // 200ms cadence × 75 iterations = 15s budget. Fast enough to catch the
+  // success card before CAMS redirects back to the statement list page.
   let result = { reference: null, isSuccess: false, text: "" };
-  for (let i = 0; i < 30; i++) {
-    await wait(500);
+  for (let i = 0; i < 75; i++) {
+    await wait(200);
     const check = await page.evaluate(() => {
       const text = document.body.innerText;
-      const hasSuccess = text.toLowerCase().includes("success");
-      const hasError = text.toLowerCase().includes("error") || text.toLowerCase().includes("invalid");
-      const refMatch = text.match(/[DC]\d{8,}/);
-      const refAlt = text.match(/reference\s*(?:number|no\.?)\s*(?:is\s*)?:?\s*([A-Z0-9]+)/i);
+      // Primary: "reference number is CP123456789" — most reliable marker
+      const refAlt = text.match(/reference\s*(?:number|no\.?)\s*(?:is\s*)?:?\s*([A-Z]{1,3}\d{8,})/i);
+      // Fallback: any letter-prefixed reference number in body text
+      const refMatch = text.match(/\b([CD][A-Z]?\d{8,})\b/);
+      // Strong success: "Your CAS-CAMS ... reference number" — distinguishes from generic page text
+      const hasSuccessText = /your\s+cas[- ]?cams.*reference\s+number/i.test(text);
+      const hasSuccess = hasSuccessText || (text.toLowerCase().includes("success") && (refAlt || refMatch));
+      const hasError = /\berror\b|\binvalid\b|\bfailed\b/i.test(text) && !hasSuccessText;
       return {
-        reference: refMatch ? refMatch[0] : (refAlt ? refAlt[1] : null),
+        reference: refAlt ? refAlt[1] : (refMatch ? refMatch[1] : null),
         isSuccess: hasSuccess,
         isDone: hasSuccess || hasError,
         text: text.substring(0, 800)
       };
     });
+    // Always keep latest snapshot so PAGE: log isn't empty when polling times out
+    result = check;
     if (check.isDone || check.reference) {
-      result = check;
       break;
     }
   }
@@ -234,7 +241,8 @@ async function main() {
   if (result.reference) {
     console.log("REF:" + result.reference);
   }
-  if (result.isSuccess) {
+  // Reference number is the most reliable success signal
+  if (result.isSuccess || result.reference) {
     console.log("STATUS:SUCCESS");
     console.log(`CAS will be emailed to the registered email for ${EMAIL}`);
   } else {
